@@ -7,49 +7,45 @@ public class FastCollinearPoints {
 
     private int segmentNum = 0;
 
-    private void resize(int l) {
-        LineSegment[] newArray = new LineSegment[l];
-        int newArrayN = 0;
-        for (int i = 0; i < lines.length; i++) {
-            if (lines[i] != null) {
-                newArray[newArrayN] = lines[i];
-                newArrayN++;
-            }
-        }
-        lines = newArray;
-    }
-
     // finds all line segments containing 4 or more points
     public FastCollinearPoints(Point[] points) {
+        if (points == null) throw new NullPointerException("EMPTY ARRAY");
+
         int len = points.length;
-        double lineInfo[] = new double[len]; // stores slope info of line segments
+        double[] lineInfo = new double[len]; // stores slope info of line segments
         Point[] start = new Point[len]; // stores starting point for segments
         Point[] sorted = new Point[len];
+
+        Point[] testing = new Point[len];
+        int testingNum = 0;
 
         lines = new LineSegment[len];
 
         for (int i = 0; i < len; i++) {
+            if (points[i] == null) throw new NullPointerException("NULL POINT");
+
             for (int n = 0; n < len; n++) {
                 sorted[n] = points[n];
+
+                if (points[i].slopeTo(sorted[n]) == Double.NEGATIVE_INFINITY || points[i].slopeTo(sorted[n]) == Double.POSITIVE_INFINITY) {
+                    testing[testingNum] = sorted[n];
+                    testingNum++;
+                }
             }
 
             Arrays.sort(sorted, 0, len, points[i].slopeOrder());
-/*
-            // DEBUG
 
-            StdOut.println(sorted);
-            for (int k = 0; k < len; k++) {
-                double test = points[i].slopeTo(sorted[k]);
-                StdOut.println(test);
+            //DEBUG
+
+            for (int d = 0; d < len; d++) {
+                double x = points[i].slopeTo(points[d]);
+                StdOut.println(x);
             }
-*/
-            // Test if the segment is already tested
 
-
-
-
-            double currentSlope = +0.0;
+            double currentSlope = 0;
             double nextSlope = 0;
+            double prevSlope = 0;
+            double checkDuplicate = 0;
             int pointNum = 2;
             int j = 0;
             boolean tested = false;
@@ -60,9 +56,16 @@ public class FastCollinearPoints {
             while (j < len) {
                 currentSlope = points[i].slopeTo(sorted[j]);
 
+                if (currentSlope == Double.NEGATIVE_INFINITY && checkDuplicate >= 1) {
+                    throw new IllegalArgumentException("DUPLICATE POINTS");
+                } else if (currentSlope == Double.NEGATIVE_INFINITY){
+                    checkDuplicate++;
+                }
+
                 for (int x = 0; x < segmentNum; x++) {
                     if (currentSlope == lineInfo[x] &&
-                            (points[i].slopeTo(start[x]) == currentSlope || points[i].slopeTo(start[x]) == Double.NEGATIVE_INFINITY)) {
+                            (points[i].slopeTo(start[x]) == currentSlope ||
+                                    points[i].slopeTo(start[x]) == Double.NEGATIVE_INFINITY)) {
                         tested = true;
                     }
                 }
@@ -74,7 +77,18 @@ public class FastCollinearPoints {
 
                 if (j < len - 1) nextSlope = points[i].slopeTo(sorted[j + 1]);
 
-                if ((j == len - 1 || nextSlope != currentSlope) && pointNum >= 4){
+                if (j > 0) prevSlope = points[i].slopeTo(sorted[j - 1]);
+
+                if ((j == len - 1 || nextSlope != currentSlope) && pointNum >= 4) {
+                    if (((nextSlope >= 0 && sorted[j].compareTo(min) < 0) ||
+                            (nextSlope < 0 && sorted[j].compareTo(min) > 0)) && prevSlope == currentSlope) {
+                        min = sorted[j];
+                    } else if (((nextSlope >= 0 && sorted[j].compareTo(max) > 0) ||
+                            (nextSlope < 0 && sorted[j].compareTo(max) < 0)) && prevSlope == currentSlope) {
+                        max = sorted[j];
+                    }
+
+
                     lineInfo[segmentNum] = currentSlope;
                     start[segmentNum] = min;
                     lines[segmentNum] = new LineSegment(min, max);
@@ -86,9 +100,6 @@ public class FastCollinearPoints {
                     j++;
 
                     continue;
-                } else if (j == len - 1) {
-                    j++;
-                    continue;
                 } else if (nextSlope != currentSlope) {
                     pointNum = 2;
                     min = points[i];
@@ -98,28 +109,48 @@ public class FastCollinearPoints {
                     continue;
                 }
 
-                if (sorted[j].compareTo(min) < 0) {
+                if ((nextSlope >= 0 && sorted[j].compareTo(min) < 0) ||
+                        (nextSlope < 0 && sorted[j].compareTo(min) > 0)) {
                     min = sorted[j];
-                    pointNum++;
-                } else if (sorted[j].compareTo(max) > 0) {
+                } else if ((nextSlope >= 0 && sorted[j].compareTo(max) > 0) ||
+                        (nextSlope < 0 && sorted[j].compareTo(max) < 0)) {
                     max = sorted[j];
-                    pointNum++;
                 }
 
+                pointNum++;
                 j++;
             }
         }
         resize(segmentNum);
-
     }
 
     // the number of line segments
     public int numberOfSegments() {
-        return segmentNum;
+        int returnSegNum = segmentNum;
+
+        return returnSegNum;
     }
 
     // the line segments
     public LineSegment[] segments() {
-        return lines;
+        LineSegment[] returnSeg = new LineSegment[segmentNum];
+
+        for (int i = 0; i < segmentNum; i++) {
+            returnSeg[i] = lines[i];
+        }
+
+        return returnSeg;
+    }
+
+    private void resize(int l) {
+        LineSegment[] newArray = new LineSegment[l];
+        int newArrayN = 0;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i] != null) {
+                newArray[newArrayN] = lines[i];
+                newArrayN++;
+            }
+        }
+        lines = newArray;
     }
 }
