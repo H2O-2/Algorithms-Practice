@@ -1,5 +1,3 @@
-import edu.princeton.cs.algs4.StdOut;
-
 import java.util.Arrays;
 
 public class FastCollinearPoints {
@@ -12,12 +10,9 @@ public class FastCollinearPoints {
         if (points == null) throw new NullPointerException("EMPTY ARRAY");
 
         int len = points.length;
-        double[] lineInfo = new double[len]; // stores slope info of line segments
-        Point[] start = new Point[len]; // stores starting point for segments
+        double[] lineInfo = new double[len * 2]; // stores slope info of line segments
+        Point[] start = new Point[len * 2]; // stores starting point for segments
         Point[] sorted = new Point[len];
-
-        Point[] testing = new Point[len];
-        int testingNum = 0;
 
         lines = new LineSegment[len];
 
@@ -26,21 +21,9 @@ public class FastCollinearPoints {
 
             for (int n = 0; n < len; n++) {
                 sorted[n] = points[n];
-
-                if (points[i].slopeTo(sorted[n]) == Double.NEGATIVE_INFINITY || points[i].slopeTo(sorted[n]) == Double.POSITIVE_INFINITY) {
-                    testing[testingNum] = sorted[n];
-                    testingNum++;
-                }
             }
 
             Arrays.sort(sorted, 0, len, points[i].slopeOrder());
-
-            //DEBUG
-
-            for (int d = 0; d < len; d++) {
-                double x = points[i].slopeTo(points[d]);
-                StdOut.println(x);
-            }
 
             double currentSlope = 0;
             double nextSlope = 0;
@@ -58,7 +41,7 @@ public class FastCollinearPoints {
 
                 if (currentSlope == Double.NEGATIVE_INFINITY && checkDuplicate >= 1) {
                     throw new IllegalArgumentException("DUPLICATE POINTS");
-                } else if (currentSlope == Double.NEGATIVE_INFINITY){
+                } else if (currentSlope == Double.NEGATIVE_INFINITY) {
                     checkDuplicate++;
                 }
 
@@ -80,11 +63,9 @@ public class FastCollinearPoints {
                 if (j > 0) prevSlope = points[i].slopeTo(sorted[j - 1]);
 
                 if ((j == len - 1 || nextSlope != currentSlope) && pointNum >= 4) {
-                    if (((nextSlope >= 0 && sorted[j].compareTo(min) < 0) ||
-                            (nextSlope < 0 && sorted[j].compareTo(min) > 0)) && prevSlope == currentSlope) {
+                    if (sorted[j].compareTo(min) < 0 && prevSlope == currentSlope) {
                         min = sorted[j];
-                    } else if (((nextSlope >= 0 && sorted[j].compareTo(max) > 0) ||
-                            (nextSlope < 0 && sorted[j].compareTo(max) < 0)) && prevSlope == currentSlope) {
+                    } else if (sorted[j].compareTo(max) > 0 && prevSlope == currentSlope) {
                         max = sorted[j];
                     }
 
@@ -100,6 +81,9 @@ public class FastCollinearPoints {
                     j++;
 
                     continue;
+                } else if (j == len - 1) {
+                    j++;
+                    continue;
                 } else if (nextSlope != currentSlope) {
                     pointNum = 2;
                     min = points[i];
@@ -109,19 +93,21 @@ public class FastCollinearPoints {
                     continue;
                 }
 
-                if ((nextSlope >= 0 && sorted[j].compareTo(min) < 0) ||
-                        (nextSlope < 0 && sorted[j].compareTo(min) > 0)) {
+                if (sorted[j].compareTo(min) < 0) {
                     min = sorted[j];
-                } else if ((nextSlope >= 0 && sorted[j].compareTo(max) > 0) ||
-                        (nextSlope < 0 && sorted[j].compareTo(max) < 0)) {
+                    pointNum++;
+                } else if (sorted[j].compareTo(max) > 0) {
                     max = sorted[j];
+                    pointNum++;
+                } else {
+                    pointNum++;
                 }
 
-                pointNum++;
                 j++;
             }
         }
         resize(segmentNum);
+
     }
 
     // the number of line segments

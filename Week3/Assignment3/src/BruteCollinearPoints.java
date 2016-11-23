@@ -6,20 +6,25 @@ public class BruteCollinearPoints {
     private int segmentNum = 0;
 
     // finds all line segments containing 4 points
-    public BruteCollinearPoints(Point[] points) {
-        if (points == null) throw new NullPointerException("EMPTY ARRAY");
+    public BruteCollinearPoints(Point[] inPoints) {
+        if (inPoints == null) throw new NullPointerException("EMPTY ARRAY");
 
         Point max;
         Point maxPrev;
         Point min;
         Point minPrev;
 
-        int len = points.length;
-        double[] lineInfo = new double[len]; // stores slope info of line segments
-        Point[] start = new Point[len]; // stores starting point for segments
+        int len = inPoints.length;
+        double[] lineInfo = new double[len * 2]; // stores slope info of line segments
+        Point[] start = new Point[len * 2]; // stores starting point for segments
+        Point[] points = new Point[len];
+
+        for (int n = 0; n < len; n++) {
+            points[n] = inPoints[n];
+        }
 
         Arrays.sort(points, 0, len);
-        lines = new LineSegment[len];
+        lines = new LineSegment[len * 2];
 
         for (int i = 0; i < len; i++) {
             if (points[i] == null) throw new NullPointerException("EMPTY POINT");
@@ -36,7 +41,7 @@ public class BruteCollinearPoints {
                 double newSlope = points[i].slopeTo(points[j]);
 
                 for (int k = j + 1; k < len; k++) {
-                    if (isSame(points[i], points[k]) || isSame(points[i], points[k]))
+                    if (isSame(points[i], points[k]) || isSame(points[j], points[k]))
                         throw new IllegalArgumentException("REPEATED POINTS");
                     if (points[k] == null) throw new NullPointerException("EMPTY POINT");
 
@@ -106,12 +111,20 @@ public class BruteCollinearPoints {
 
     // the number of line segments
     public int numberOfSegments() {
-        return segmentNum;
+        int returnSegNum = segmentNum;
+
+        return returnSegNum;
     }
 
     // the line segments
     public LineSegment[] segments() {
-        return lines;
+        LineSegment[] returnSeg = new LineSegment[segmentNum];
+
+        for (int i = 0; i < segmentNum; i++) {
+            returnSeg[i] = lines[i];
+        }
+
+        return returnSeg;
     }
 
     // check if p1 and p2 are same points
