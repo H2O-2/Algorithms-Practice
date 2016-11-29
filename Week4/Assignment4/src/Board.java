@@ -8,8 +8,7 @@ public class Board {
     private final int n;
     private int zeroX = 0;
     private int zeroY = 0;
-    private int[][] boardArray;
-    private Queue<Board> neighborBoard = new Queue<>();
+    private final int[][] boardArray;
 
     // construct a board from an n-by-n array of blocks (where blocks[i][j] = block in row i, column j)
     public Board(int[][] blocks) {
@@ -65,6 +64,7 @@ public class Board {
         for (int y = 0; y < n; y++) {
             for (int x = 0; x < n; x++) {
                 int v = boardArray[y][x];
+                if (v == 0) continue;
                 int goalY = (int) Math.abs(Math.floor(v/n));
                 if (v % n == 0) goalY--;
                 int goalX = v - n * goalY - 1;
@@ -83,7 +83,7 @@ public class Board {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
 
-                if (i == n - 1 && j==n - 1) continue;
+                if (i == n - 1 && j == n - 1) continue;
 
                 if (boardArray[i][j] != goalNum(j, i)) {
                     int test1 = boardArray[i][j];
@@ -136,6 +136,7 @@ public class Board {
 
     // all neighboring boards
     public Iterable<Board> neighbors() {
+        Queue<Board> neighborBoard = new Queue<>();
 
         if (zeroX - 1 >= 0) {
             int[][] leftN = new int[n][n];

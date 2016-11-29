@@ -37,8 +37,8 @@ public class Solver {
 
     private class BoardCompare implements Comparator<SearchNode> {
         public int compare(SearchNode b1, SearchNode b2) {
-            int b1V = b1.cur.hamming() + b1.getMoves();
-            int b2V = b2.cur.hamming() + b2.getMoves();
+            int b1V = b1.cur.manhattan() + b1.getMoves();
+            int b2V = b2.cur.manhattan() + b2.getMoves();
 
             if (b1V > b2V) return 1;
             else return -1;
@@ -66,29 +66,29 @@ public class Solver {
         Board twinBoard;
 
         while (!curBoard.isGoal()) {
-            StdOut.println(curBoard.manhattan());
             curNode = game.delMin();
             curBoard = curNode.getCur();
+            // StdOut.println(curBoard.hamming());
             twinNode = twinGame.delMin();
             twinBoard = twinNode.getCur();
 
             if (twinBoard.isGoal()) {
                 minMoves = -1;
                 solvable = false;
-                return;
+                break;
             }
 
             if (curNode.getPrev() != null) minMoves = curNode.getMoves() + 1;
             if (twinNode.getPrev() != null) twinMin = twinNode.getMoves() + 1;
 
             for (Board board : curBoard.neighbors()) {
-                if (board.equals(curNode.getPrev())) continue;
+                if (curNode.getPrev() != null && board.equals(curNode.getPrev().getCur())) continue;
 
                 game.insert(new SearchNode(board, curNode, minMoves));
             }
 
             for (Board tBoard : twinBoard.neighbors()) {
-                if (tBoard.equals(twinNode.getPrev())) continue;
+                if (twinNode.getPrev() != null && tBoard.equals(twinNode.getPrev().getCur())) continue;
 
                 twinGame.insert(new SearchNode(tBoard, twinNode, twinMin));
             }
@@ -99,7 +99,6 @@ public class Solver {
                 solutionBoard.push(curNode.getCur());
                 curNode = curNode.getPrev();
             }
-
             solutionBoard.push(curNode.getCur());
         } else {
             solutionBoard = null;
@@ -118,6 +117,7 @@ public class Solver {
 
     // sequence of boards in a shortest solution; null if unsolvable
     public Iterable<Board> solution() {
+        StdOut.println();
         return solutionBoard;
     }
 
