@@ -1,7 +1,5 @@
 import edu.princeton.cs.algs4.*;
 
-import java.util.Iterator;
-
 public class KdTree {
     private Node root;
     private Point2D nearest;
@@ -11,11 +9,11 @@ public class KdTree {
         private RectHV rect;
         private int size;
         private Node lb;
-        private Node rt;
+        private Node top;
         private Node rb;
         private boolean isVertical = true;
 
-        public Node (Point2D p, int size) {
+        public Node(Point2D p, int size) {
             this.p = p;
             this.size = size;
         }
@@ -23,16 +21,16 @@ public class KdTree {
         public Node(Point2D p, Node lb, Node rt, boolean isVertical) {
             this.p = p;
             this.lb = lb;
-            this.rt = rt;
+            this.top = rt;
             this.isVertical = isVertical;
         }
 
         public int compareTo(Node that) {
             if (isVertical) {
-                if (p.x() > that.p.x()) return 1;
+                if (p.x() > that.p.x() || (p.x() == that.p.x() && p.y() > that.p.y())) return 1;
                 else return -1;
             } else {
-                if (p.y() > that.p.y()) return 1;
+                if (p.y() > that.p.y() || (p.y() == that.p.y() && p.x() > that.p.x())) return 1;
                 else return -1;
             }
         }
@@ -53,6 +51,7 @@ public class KdTree {
     private Node put(Node n, Point2D p) {
         if (n == null) return new Node(p, 1);
 
+        //int cmp = p.compareTo(n.p);
         int cmp;
 
         if (n.isVertical) {
@@ -65,10 +64,11 @@ public class KdTree {
 
         if (cmp < 0) {
             n.lb = put(n.lb, p);
-            n.lb.rt = n;
+            n.lb.top = n;
             n.lb.isVertical = !n.isVertical;
         } else if (cmp > 0) {
             n.rb = put(n.rb, p);
+            n.rb.top = n;
             n.rb.isVertical = !n.isVertical;
         } else {
             n.p = p;
@@ -81,7 +81,17 @@ public class KdTree {
     private Node get(Node n, Point2D p) {
         if (n == null) return null;
 
-        int cmp = p.compareTo(n.p);
+        if (n.p.x() == p.x() && n.p.y() == p.y()) return n;
+
+        int cmp;
+
+        if (n.isVertical) {
+            if (p.x() > n.p.x() || (p.x() == n.p.x() && p.y() > n.p.y())) cmp = 1;
+            else cmp = -1;
+        } else {
+            if (p.y() > n.p.y() || (p.y() == n.p.y() && p.x() > n.p.x())) cmp = 1;
+            else cmp = -1;
+        }
 
         if (cmp < 0) return get(n.lb, p);
         else if (cmp > 0) return get(n.rb, p);
@@ -119,7 +129,7 @@ public class KdTree {
                 range(n.rb, rectSet, rect);
             } else if (n.p.x() >= rect.xmax()) {
                 range(n.lb, rectSet, rect);
-            } else if (n.p.x() <= rect.xmin()){
+            } else if (n.p.x() <= rect.xmin()) {
                 range(n.rb, rectSet, rect);
             }
         } else {
@@ -128,7 +138,7 @@ public class KdTree {
                 range(n.rb, rectSet, rect);
             } else if (n.p.y() >= rect.ymax()) {
                 range(n.lb, rectSet, rect);
-            } else if (n.p.y() <= rect.ymin()){
+            } else if (n.p.y() <= rect.ymin()) {
                 range(n.rb, rectSet, rect);
             }
         }
@@ -141,28 +151,22 @@ public class KdTree {
 
         Point2D newP = minP;
 
-        if (newP == null || n.p.distanceSquaredTo(p) < newP.distanceSquaredTo(p)) {
-            double test1 = n.p.distanceSquaredTo(p);
-            double test2 = 0;
-
-            if (newP != null) test2 = newP.distanceSquaredTo(p);
-            double test3 = test2;
-
-            if (n.p.x() == 0.206107) {
-                StdOut.println(n.p.x());
-            }
-            newP = n.p;
-        }
+        if (newP == null || n.p.distanceSquaredTo(p) < newP.distanceSquaredTo(p)) newP = n.p;
 
         Point2D oldP = newP;
 
+        double pX = p.x();
+        double pY = p.y();
+
         if (n.isVertical) {
-            if (newP.x() <= p.x()) {
+
+            if (newP.x() <= pX) {
                 newP = nearest(n.rb, p, newP);
 
                 if (newP == null) {
                     newP = nearest(n.lb, p, oldP);
-                } else if (newP.compareTo(oldP) == 0 || newP.x() > p.x()) {
+                } else if (newP.compareTo(oldP) == 0 || (newP.x() - pX) * (newP.x() - pX) <= newP.distanceSquaredTo(p)) {
+                    oldP = newP;
                     newP = nearest(n.lb, p, newP);
                 }
             } else {
@@ -170,17 +174,19 @@ public class KdTree {
 
                 if (newP == null) {
                     newP = nearest(n.rb, p, oldP);
-                } else if (newP.compareTo(oldP) == 0 || newP.x() < p.x()) {
+                } else if (newP.compareTo(oldP) == 0 || (newP.x() - pX) * (newP.x() - pX) <= newP.distanceSquaredTo(p)) {
+                    oldP = newP;
                     newP = nearest(n.rb, p, newP);
                 }
             }
         } else {
-            if (newP.y() <= p.y()) {
+            if (newP.y() <= pY) {
                 newP = nearest(n.rb, p, newP);
 
                 if (newP == null) {
                     newP = nearest(n.lb, p, oldP);
-                } else if (newP.compareTo(oldP) == 0 || newP.y() > p.y()) {
+                } else if (newP.compareTo(oldP) == 0 || (newP.y() - pY) * (newP.y() - pY) <= newP.distanceSquaredTo(p)) {
+                    oldP = newP;
                     newP = nearest(n.lb, p, newP);
                 }
             } else {
@@ -188,7 +194,8 @@ public class KdTree {
 
                 if (newP == null) {
                     newP = nearest(n.rb, p, oldP);
-                } else if (newP.compareTo(oldP) == 0 || newP.y() < p.y()) {
+                } else if (newP.compareTo(oldP) == 0 || (newP.y() - pY) * (newP.y() - pY) <= newP.distanceSquaredTo(p)) {
+                    oldP = newP;
                     newP = nearest(n.rb, p, newP);
                 }
             }
@@ -198,14 +205,10 @@ public class KdTree {
             newP = oldP;
         }
 
-
-        //StdDraw.setPenColor(StdDraw.GREEN);
-        //StdDraw.setPenRadius(0.05);
-        //newP.draw();
         return newP;
     }
 
-    public Iterable<Node> iterable() {
+    private Iterable<Node> iterable() {
         Queue<Node> queue = new Queue<>();
         iterable(root, queue);
         return queue;
@@ -218,6 +221,7 @@ public class KdTree {
 
     // number of points in the set
     public int size() {
+        if (root == null) return 0;
         return root.size;
     }
 
@@ -232,16 +236,24 @@ public class KdTree {
     public boolean contains(Point2D p) {
         if (p == null) throw new NullPointerException("NULL POINT");
 
-        return get(root, p) == null;
+        return get(root, p) != null;
     }
 
     // draw all points to standard draw
     public void draw() {
+        Point2D curPoint;
+
         for (Node node: iterable()) {
+            curPoint = node.p;
+
             StdDraw.setPenColor(StdDraw.BLACK);
             StdDraw.setPenRadius(0.01);
-            node.p.draw();
+            curPoint.draw();
 
+            if (node.isVertical) {
+                RectHV test = new RectHV(curPoint.x(), 0, 1, 1);
+                test.draw();
+            }
         }
     }
 
@@ -249,40 +261,37 @@ public class KdTree {
     public Iterable<Point2D> range(RectHV rect) {
         if (rect == null) throw new NullPointerException("INVALID RECTANGLE");
 
-        SET<Point2D> rectSet = new SET();
+        SET<Point2D> rectSet = new SET<>();
 
         range(root, rectSet, rect);
 
         return rectSet;
     }
 
-
-/*
-//DEBUG
-    public Iterable<Point2D> range(RectHV rect) {
-        if (rect == null) throw new NullPointerException("INVALID RECTANGLE");
-
-        SET<Point2D> rectSet = new SET<>();
-
-        for (Node node : iterable()) {
-            if (rect.contains(node.p)) {
-                rectSet.add(node.p);
-            }
-        }
-
-        return rectSet;
-    }
-*/
     // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
-        Point2D minP = null;
+        Point2D minP;
 
-        minP = nearest(root, p, minP);
+        minP = nearest(root, p, null);
 
         return minP;
     }
 
     public static void main(String[] args) {
+        String filename = args[0];
+        In in = new In(filename);
 
+        KdTree kdtree = new KdTree();
+
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            //StdOut.println(kdtree.size());
+            kdtree.insert(p);
+        }
+
+        Point2D test = new Point2D(0.740877, 0.938153);
+        StdOut.println(kdtree.contains(test));
     }
 }

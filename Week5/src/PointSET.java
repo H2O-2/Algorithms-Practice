@@ -1,6 +1,4 @@
-import edu.princeton.cs.algs4.Point2D;
-import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.SET;
+import edu.princeton.cs.algs4.*;
 
 import java.util.Iterator;
 
@@ -54,8 +52,8 @@ public class PointSET {
 
     // draw all points to standard draw
     public void draw() {
-        for (Iterator i = bst.iterator();i.hasNext();) {
-            Node node = (Node)i.next();
+        for (Iterator<Node> i = bst.iterator(); i.hasNext();) {
+            Node node = i.next();
             node.getP().draw();
         }
     }
@@ -66,8 +64,8 @@ public class PointSET {
 
         SET<Point2D> rectSet = new SET<>();
 
-        for (Iterator i = bst.iterator();i.hasNext();) {
-            Node node = (Node)i.next();
+        for (Iterator<Node> i = bst.iterator(); i.hasNext();) {
+            Node node = i.next();
             if (rect.contains(node.getP())) {
                 rectSet.add(node.getP());
             }
@@ -80,8 +78,8 @@ public class PointSET {
     public Point2D nearest(Point2D p) {
         Point2D minP = null;
 
-        for (Iterator i = bst.iterator();i.hasNext();) {
-            Node node = (Node)i.next();
+        for (Iterator<Node> i = bst.iterator(); i.hasNext();) {
+            Node node = i.next();
             if (minP == null || node.getP().distanceSquaredTo(p) < minP.distanceSquaredTo(p)) minP = node.getP();
         }
 
@@ -89,6 +87,17 @@ public class PointSET {
     }
 
     public static void main(String[] args) {
+        String filename = args[0];
+        In in = new In(filename);
 
+        PointSET brutetree = new PointSET();
+
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            StdOut.println(brutetree.size());
+            brutetree.insert(p);
+        }
     }
 }
