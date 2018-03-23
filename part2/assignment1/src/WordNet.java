@@ -65,17 +65,16 @@ public class WordNet {
 
         // get index of entity (root)
         final int rootIndex = this.synsets.indexOf(Collections.singletonList("entity"));
+        // run BFS on the reverse of given DAG to check if it is rooted
         BreadthFirstDirectedPaths bfs =
             new BreadthFirstDirectedPaths(this.wordNet.reverse(), rootIndex);
-        // debug(this.wordNet);
         for (int n = 0; n < this.wordNet.V(); n++) {
             if (!bfs.hasPathTo(n)) {
-                debug(n);
                 throw new IllegalArgumentException("INPUT NOT ROOTED");
             }
         }
 
-        debug("pass");
+        // debug(this.wordNet);
     }
 
     // returns all WordNet nouns
@@ -85,6 +84,8 @@ public class WordNet {
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
+        if (word == null) throw new IllegalArgumentException("INVALID WORD");
+
         if (this.wordNetNouns.indexOf(word) < 0) {
             return false;
         }
@@ -94,12 +95,16 @@ public class WordNet {
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
+        if (nounA == null || nounB == null) throw new IllegalArgumentException("INVALID NOUN");
+
         return 0;
     }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
+        if (nounA == null || nounB == null) throw new IllegalArgumentException("INVALID NOUN");
+
         return "";
     }
 
