@@ -2,9 +2,42 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.BreadthFirstDirectedPaths;
+import edu.princeton.cs.algs4.Queue;
 
 public class SAP {
     private Digraph digraph;
+
+    private int graphV() {
+        return this.digraph.V();
+    }
+
+    private void debug(Object o) {
+        StdOut.println(o);
+    }
+
+    private int findLength(BreadthFirstDirectedPaths bfsv, BreadthFirstDirectedPaths bfsw, int v, int w) {
+        boolean hasPath = false;
+        int shortest = -1;
+        Queue<Integer> q = new Queue<Integer>();
+        q.enqueue(v);
+
+        while (!hasPath || !q.isEmpty()) {
+            int s = q.dequeue();
+            for (int vAdj : this.digraph.adj(s)) {
+                q.enqueue(vAdj);
+                if (bfsv.hasPathTo(vAdj) && bfsw.hasPathTo(vAdj)) {
+                    hasPath = true;
+
+                    final int dist = bfsv.distTo(v) + bfsw.distTo(w);
+                    if (dist < shortest || shortest < 0) {
+                        shortest = dist;
+                    }
+                }
+            }
+        }
+
+        return shortest;
+    }
 
     // constructor takes a digraph (not necessarily a DAG)
     public SAP(Digraph G) {
@@ -17,7 +50,10 @@ public class SAP {
     public int length(int v, int w) {
         if (v > graphV() || v < 0 || w > graphV() || w < 0) throw new IllegalArgumentException("INVALID VERTEX");
 
-        return 0;
+        BreadthFirstDirectedPaths bfsv = new BreadthFirstDirectedPaths(this.digraph, v);
+        BreadthFirstDirectedPaths bfsw = new BreadthFirstDirectedPaths(this.digraph, w);
+
+        return findLength(bfsv, bfsw, v, w);
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
@@ -39,14 +75,6 @@ public class SAP {
         if (v == null || w == null) throw new IllegalArgumentException("INVALID VERTEX");
 
         return 0;
-    }
-
-    private int graphV() {
-        return this.digraph.V();
-    }
-
-    private void debug(Object o) {
-        StdOut.println(o);
     }
 
     // private void debugIter(Iterable<T> iterable) {
